@@ -1,0 +1,97 @@
+**Note:** This project was completed as a guided learning exercise following Alex the Analyst's tutorial series, used to practice pandas data cleaning and correlation analysis with seaborn/matplotlib.
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+%matplotlib inline
+import matplotlib as mpl
+mpl.rcParams['figure.figsize'] = (12, 8) 
+# Read in the data
+df = pd.read_csv(r'C:\Users\Brian Otto\Documents\Career\Training\Data Analyst Training\Portfolio_Projects\Movie Correlation\movies_dataset.csv')
+# Look at the data
+df.head()
+# Checking for any missing data. 
+for col in df.columns:
+    pct_missing = np.mean(df[col].isnull())
+    print('{} - {}%'.format(col, pct_missing))
+# Date types for columns. 
+df.dtypes
+df['budget'] = pd.to_numeric(df['budget'], errors='coerce').fillna(0).astype('int64')
+df['gross'] = pd.to_numeric(df['gross'], errors='coerce').fillna(0).astype('int64')
+# Cast budget and gross to int64
+df['budget'] = df['budget'].astype('int64')
+df['gross'] = df['gross'].astype('int64')
+df.dtypes
+# Streamline Year to show releasse year in only one column. 
+
+df['yearcorrect'] = df['released'].astype(str).str[:4]
+df.head()
+df.sort_values(by=['gross'], inplace=False, ascending=False)
+df.head()
+pd.set_option('display.max_rows', None)
+
+# Drop Duplicates. No True Duplicates exist.
+df['company'].drop_duplicates().sort_values(ascending=False)
+df.head()
+# 
+df.head().sort_values(by="budget", ascending=False)
+# Using Scatter Plot to validate high correlation Budget v. gross.
+plt.scatter(x=df['budget'], y=df['gross'])
+plt.title('Budget vs Gross Earnings')
+plt.xlabel('Gross Earnings')
+plt.ylabel('Budget for film')
+plt.show()
+df.head().sort_values(by="budget", ascending=False)
+# Plot budget vs gross using seaborn.
+sns.regplot(x='budget', y='gross', data=df)
+plt.show() 
+# Plot budget vs gross using seaborn, expanding above to show the colors. 
+# Determine correlation for non numerical fields like company, etc.   
+
+sns.regplot(x='budget', y='gross', data=df, scatter_kws={"color":"red"}, line_kws={"color":"blue"})
+plt.show()
+df.corr(numeric_only=True)
+# Looking at correlation. There are different methods for correlation.
+df.corr(method='pearson', numeric_only=True)
+# High correlation between budget and gross
+correlation_matrix = df.corr(method='pearson', numeric_only=True)
+sns.heatmap(df.corr(numeric_only=True), annot = True) 
+plt.title('Correlation Matrix for Numeric Features')
+plt.xlabel('Movie Features')
+plt.ylabel('Movie Features')
+plt.show()
+# Assign numeric value for each company (use .copy() so this doesn't mutate the original df)
+df_numerized = df.copy()
+for col_name in df_numerized.columns:
+    if(df_numerized[col_name].dtype == 'object'):
+        df_numerized[col_name] = df_numerized[col_name].astype('category')
+        df_numerized[col_name] = df_numerized[col_name].cat.codes
+        df_numerized      
+df.head()
+df.dtypes
+sns.heatmap(df_numerized.corr(numeric_only=True), annot = True) 
+plt.title('Correlation Matrix for Numeric Features')
+plt.xlabel('Movie Features')
+plt.ylabel('Movie Features')
+plt.show()
+# 
+df_numerized.corr(numeric_only=True)
+# Unstacking
+correlation_mat = df_numerized.corr()
+
+corr_pairs = correlation_mat.unstack()
+corr_pairs.head(20)
+
+# Now everything is paired up
+sorted_pairs = corr_pairs.sort_values()
+
+sorted_pairs.head(20)
+
+# Sorted Pairs greater than 0.5 High Correlations
+high_corr = sorted_pairs[(sorted_pairs) > 0.5]
+high_corr
+
+# Save & Upload to GitHub - To do after cleaning up and finalizing
+# To reduce size, where were have alot of data on screen do: df.head() and run, which gives a small sample of the data for those
+# Could only Upload to GitHub if under 25MB
